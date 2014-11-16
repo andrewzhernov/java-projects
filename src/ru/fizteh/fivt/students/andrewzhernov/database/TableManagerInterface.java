@@ -1,8 +1,8 @@
-package ru.fizteh.fivt.students.andrewzhernov.junit;
+package ru.fizteh.fivt.students.andrewzhernov.database;
 
 import java.util.Map;
 
-public interface TableProviderInterface {
+public interface TableManagerInterface {
 
     /**
      * Возвращает таблицу с указанным названием.

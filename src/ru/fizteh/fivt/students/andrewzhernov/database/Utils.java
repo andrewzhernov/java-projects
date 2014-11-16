@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.andrewzhernov.junit;
+package ru.fizteh.fivt.students.andrewzhernov.database;
 
 import java.io.*;
 import java.nio.file.Files;

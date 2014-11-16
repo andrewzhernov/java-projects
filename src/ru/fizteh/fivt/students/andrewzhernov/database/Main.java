@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.andrewzhernov.junit;
+package ru.fizteh.fivt.students.andrewzhernov.database;
 
 import java.util.List;
 import java.util.Map;
@@ -6,11 +6,11 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
         try {
-            TableProvider database = new TableProvider(System.getProperty("fizteh.db.dir"));
+            TableManager database = new TableManager(System.getProperty("fizteh.db.dir"));
             Shell shell = new Shell(database, new Command[] {
                 new Command("size", 1, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().size();
                     }
                     @Override
@@ -20,7 +20,7 @@ public class Main {
                 }),
                 new Command("put", 3, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().put(args[1], args[2]);
                     }
                     @Override
@@ -36,7 +36,7 @@ public class Main {
                 }),
                 new Command("get", 2, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().get(args[1]);
                     }
                     @Override
@@ -52,7 +52,7 @@ public class Main {
                 }),
                 new Command("remove", 2, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().remove(args[1]);
                     }
                     @Override
@@ -66,7 +66,7 @@ public class Main {
                 }),
                 new Command("list", 1, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().list();
                     }
                     @Override
@@ -78,7 +78,7 @@ public class Main {
                 }),
                 new Command("commit", 1, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().commit();
                     }
                     @Override
@@ -88,7 +88,7 @@ public class Main {
                 }),
                 new Command("rollback", 1, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().rollback();
                     }
                     @Override
@@ -98,7 +98,7 @@ public class Main {
                 }),
                 new Command("create", 2, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         return database.createTable(args[1]);
                     }
                     @Override
@@ -108,7 +108,7 @@ public class Main {
                 }),
                 new Command("drop", 2, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         database.removeTable(args[1]);
                         return null;
                     }
@@ -119,7 +119,7 @@ public class Main {
                 }),
                 new Command("use", 2, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         return database.useTable(args[1]);
                     }
                     @Override
@@ -129,7 +129,7 @@ public class Main {
                 }),
                 new Command("show tables", 2, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         return database.showTables();
                     }
                     @Override
@@ -143,7 +143,7 @@ public class Main {
                 }),
                 new Command("exit", 1, new HandlerInterface() {
                     @Override
-                    public Object execute(TableProvider database, String[] args) throws Exception {
+                    public Object execute(TableManager database, String[] args) throws Exception {
                         database.exit();
                         return null;
                     }

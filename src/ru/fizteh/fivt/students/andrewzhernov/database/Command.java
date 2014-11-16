@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.andrewzhernov.junit;
+package ru.fizteh.fivt.students.andrewzhernov.database;
 
 public class Command {
     private String name;
@@ -15,7 +15,7 @@ public class Command {
         return name;
     }
 
-    public void execute(TableProvider database, String[] params) throws Exception {
+    public void execute(TableManager database, String[] params) throws Exception {
         if (params.length != numArgs) {
             throw new Exception(String.format("Invalid number of arguments: %d expected, %d found.",
                                               numArgs, params.length));

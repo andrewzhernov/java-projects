@@ -1,4 +1,4 @@
-package ru.fizteh.fivt.students.andrewzhernov.junit;
+package ru.fizteh.fivt.students.andrewzhernov.database;
 
 import java.util.Scanner;
 import java.util.Map;
@@ -9,11 +9,11 @@ public class Shell {
     private static final String STATEMENT_DELIMITER = ";";
     private static final String PARAM_DELIMITER = "\\s+";
 
-    private TableProvider database;
+    private TableManager manager;
     private Map<String, Command> commands;
 
-    public Shell(TableProvider database, Command[] commands) throws Exception {
-        this.database = database;
+    public Shell(TableManager manager, Command[] commands) throws Exception {
+        this.manager = manager;
         this.commands = new HashMap<>();
         for (Command command : commands) {
             this.commands.put(command.getName(), command);
@@ -56,18 +56,18 @@ public class Shell {
         for (String statement : statements) {
             String[] params = statement.trim().split(PARAM_DELIMITER);
 
-            String cmdName = null;
-            if (params.length > 0) {
-                cmdName = params[0];
-                if (cmdName.equals("show") && params.length > 1) {
-                    cmdName += (" " + params[1]); 
-                }
+            String cmdName = params[0];
+            for (int i = 1; i < params.length && commands.get(cmdName) == null; ++i) {
+                cmdName += " " + params[i];
             }
+
             Command command = commands.get(cmdName);
             if (command == null) {
-                throw new Exception("Command not found: " + cmdName);
+                if (!cmdName.isEmpty()) {
+                    throw new Exception(cmdName + ": command not found");
+                }
             } else {
-                command.execute(database, params);
+                command.execute(manager, params);
             }
         }
     }
