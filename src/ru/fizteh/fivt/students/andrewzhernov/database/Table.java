@@ -1,9 +1,11 @@
 package ru.fizteh.fivt.students.andrewzhernov.database;
 
+import static java.util.EnumSet.of;
+import static ru.fizteh.fivt.students.andrewzhernov.database.PermissionsValidator.Permissions.*;
+
 import java.io.*;
 import java.lang.Integer;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.io.RandomAccessFile;
 import java.util.List;
@@ -11,10 +13,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 
-import static java.util.EnumSet.of;
-import static ru.fizteh.fivt.students.andrewzhernov.database.PermissionsValidator.Permissions.*;
-
-public class Table implements TableInterface {
+public class Table implements TableImpl {
     private static final int DIRECTORIES_COUNT = 16;
     private static final int FILES_COUNT = 16;
     

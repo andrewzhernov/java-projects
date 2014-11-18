@@ -3,9 +3,9 @@ package ru.fizteh.fivt.students.andrewzhernov.database;
 public class Command {
     private String name;
     private int numArgs;
-    private HandlerInterface processor;
+    private Handler processor;
 
-    public Command(String name, int numArgs, HandlerInterface processor) {
+    public Command(String name, int numArgs, Handler processor) {
         this.name = name;
         this.numArgs = numArgs;
         this.processor = processor;

@@ -2,7 +2,7 @@ package ru.fizteh.fivt.students.andrewzhernov.database;
 
 import java.util.List;
 
-public interface TableInterface {
+public interface TableImpl {
 
     /**
      * Возвращает название базы данных.

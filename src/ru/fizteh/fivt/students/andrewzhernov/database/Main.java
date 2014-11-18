@@ -8,7 +8,7 @@ public class Main {
         try {
             TableManager database = new TableManager(System.getProperty("fizteh.db.dir"));
             Shell shell = new Shell(database, new Command[] {
-                new Command("size", 1, new HandlerInterface() {
+                new Command("size", 1, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().size();
@@ -18,7 +18,7 @@ public class Main {
                         System.out.println((Integer) object);
                     }
                 }),
-                new Command("put", 3, new HandlerInterface() {
+                new Command("put", 3, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().put(args[1], args[2]);
@@ -34,7 +34,7 @@ public class Main {
                         }
                     }
                 }),
-                new Command("get", 2, new HandlerInterface() {
+                new Command("get", 2, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().get(args[1]);
@@ -50,7 +50,7 @@ public class Main {
                         }
                     }
                 }),
-                new Command("remove", 2, new HandlerInterface() {
+                new Command("remove", 2, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().remove(args[1]);
@@ -64,7 +64,7 @@ public class Main {
                         }
                     }
                 }),
-                new Command("list", 1, new HandlerInterface() {
+                new Command("list", 1, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().list();
@@ -76,7 +76,7 @@ public class Main {
                         System.out.println(String.join(", ", list));
                     }
                 }),
-                new Command("commit", 1, new HandlerInterface() {
+                new Command("commit", 1, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().commit();
@@ -86,7 +86,7 @@ public class Main {
                         System.out.println((Integer) object);
                     }
                 }),
-                new Command("rollback", 1, new HandlerInterface() {
+                new Command("rollback", 1, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         return database.getCurrentTable().rollback();
@@ -96,7 +96,7 @@ public class Main {
                         System.out.println((Integer) object);
                     }
                 }),
-                new Command("create", 2, new HandlerInterface() {
+                new Command("create", 2, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         return database.createTable(args[1]);
@@ -106,7 +106,7 @@ public class Main {
                         System.out.println("created");
                     }
                 }),
-                new Command("drop", 2, new HandlerInterface() {
+                new Command("drop", 2, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         database.removeTable(args[1]);
@@ -117,17 +117,17 @@ public class Main {
                         System.out.println("dropped");
                     }
                 }),
-                new Command("use", 2, new HandlerInterface() {
+                new Command("use", 2, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         return database.useTable(args[1]);
                     }
                     @Override
                     public void handle(Object object) throws Exception {
-                        System.out.println("using tablename");
+                        System.out.println("using " + (String) object);
                     }
                 }),
-                new Command("show tables", 2, new HandlerInterface() {
+                new Command("show tables", 2, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         return database.showTables();
@@ -141,7 +141,7 @@ public class Main {
                         }
                     }
                 }),
-                new Command("exit", 1, new HandlerInterface() {
+                new Command("exit", 1, new Handler() {
                     @Override
                     public Object execute(TableManager database, String[] args) throws Exception {
                         database.exit();

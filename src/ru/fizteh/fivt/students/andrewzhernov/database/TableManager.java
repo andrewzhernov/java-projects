@@ -1,5 +1,8 @@
 package ru.fizteh.fivt.students.andrewzhernov.database;
 
+import static java.util.EnumSet.of;
+import static ru.fizteh.fivt.students.andrewzhernov.database.PermissionsValidator.Permissions.*;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,7 +15,7 @@ import java.lang.IllegalStateException;
 import static java.util.EnumSet.of;
 import static ru.fizteh.fivt.students.andrewzhernov.database.PermissionsValidator.Permissions.*;
 
-public class TableManager implements TableManagerInterface {
+public class TableManager implements TableManagerImpl {
     private String dbFolder;
     private Map<String, Table> nameToTableMap;
     private String currentTable;
@@ -71,9 +74,9 @@ public class TableManager implements TableManagerInterface {
 
     public Table createTable(String name) throws IllegalArgumentException {
         if (name == null || !isValidName(name)) {
-            throw new IllegalArgumentException(name + ": incorrect tablename");
+            throw new IllegalArgumentException(name + ": incorrect table name");
         } else if (nameToTableMap.containsKey(name)) {
-            throw new IllegalArgumentException("tablename exists");
+            throw new IllegalArgumentException(name + " exists");
         }
         Table table = new Table(this, name);
         nameToTableMap.put(name, table);
@@ -85,7 +88,7 @@ public class TableManager implements TableManagerInterface {
         if (name == null || !isValidName(name)) {
             throw new IllegalArgumentException(name + ": incorrect table name");
         } else if (!nameToTableMap.containsKey(name)) {
-            throw new IllegalStateException("tablename not exist");
+            throw new IllegalStateException(name + " not exist");
         } else if (name.equals(currentTable)) {
             currentTable = null;
         }
@@ -97,7 +100,7 @@ public class TableManager implements TableManagerInterface {
         if (name == null || !isValidName(name)) {
             throw new IllegalArgumentException(name + ": incorrect table name");
         } else if (!nameToTableMap.containsKey(name)) {
-            throw new IllegalArgumentException("tablename not exist");
+            throw new IllegalArgumentException(name + " not exist");
         } else if (currentTable != null && !name.equals(currentTable)) {
             checkUnsavedChanges();
         }
