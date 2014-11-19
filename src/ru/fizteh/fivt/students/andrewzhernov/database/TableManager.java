@@ -1,21 +1,15 @@
 package ru.fizteh.fivt.students.andrewzhernov.database;
 
-import static java.util.EnumSet.of;
-import static ru.fizteh.fivt.students.andrewzhernov.database.PermissionsValidator.Permissions.*;
-
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.HashMap;
-import java.lang.IllegalArgumentException;
-import java.lang.IllegalStateException;
 
 import static java.util.EnumSet.of;
 import static ru.fizteh.fivt.students.andrewzhernov.database.PermissionsValidator.Permissions.*;
 
 public class TableManager implements TableManagerImpl {
+    private final String[] invalidCharacters = {".", "|", "\\", "*", "\"", "\'", ":", "/", "?", "<", ">"};
     private String dbFolder;
     private Map<String, Table> nameToTableMap;
     private String currentTable;
@@ -30,7 +24,6 @@ public class TableManager implements TableManagerImpl {
     }
 
     private boolean isValidName(String tableName) {
-        String[] invalidCharacters = {".", "|", "\\", "*", "\"", "\'", ":", "/"};
         for (String character : invalidCharacters) {
             if (tableName.contains(character)) {
                 return false;
@@ -80,7 +73,8 @@ public class TableManager implements TableManagerImpl {
         }
         Table table = new Table(this, name);
         nameToTableMap.put(name, table);
-        PermissionsValidator.validate(table.getTableFolder(), of(NOT_NULL, CREATE_DIRECTORY_IF_NOT_EXISTS, CAN_WRITE, IS_DIRECTORY));
+        PermissionsValidator.validate(table.getTableFolder(), 
+                    of(NOT_NULL, CREATE_DIRECTORY_IF_NOT_EXISTS, CAN_WRITE, IS_DIRECTORY));
         return table;
     }
 

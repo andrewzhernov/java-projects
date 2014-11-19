@@ -1,7 +1,5 @@
 package ru.fizteh.fivt.students.andrewzhernov.database;
 
-import java.util.Map;
-
 public interface TableManagerImpl {
 
     /**

@@ -19,8 +19,7 @@ public class PermissionsValidator {
     }
 
     public static boolean validateTableName(String tableName, EnumSet<Permissions> perms) 
-            throws IllegalArgumentException 
-    {
+            throws IllegalArgumentException {
         if (perms.contains(NOT_NULL) && tableName == null) {
             throw new IllegalArgumentException("Table name hasn't been specified");
         }
@@ -28,8 +27,7 @@ public class PermissionsValidator {
     }
 
     public static boolean validateDbFolder(String dbFolder, EnumSet<Permissions> perms)
-            throws IllegalArgumentException
-    {
+            throws IllegalArgumentException {
         if (perms.contains(NOT_NULL) && dbFolder == null) {
             throw new IllegalArgumentException("Database name hasn't been specified");
         }
@@ -37,8 +35,7 @@ public class PermissionsValidator {
     }
 
     public static boolean validate(String fileName, EnumSet<Permissions> perms)
-            throws IllegalArgumentException
-    {
+            throws IllegalArgumentException {
         if (perms.contains(NOT_NULL) && fileName == null) {
             throw new IllegalArgumentException("File name hasn't been specified");
         }
@@ -46,15 +43,14 @@ public class PermissionsValidator {
         if (perms.contains(EXISTS) && !file.exists()) {
             return false;
         }
-        if ((perms.contains(CREATE_FILE_IF_NOT_EXISTS) || 
-             perms.contains(CREATE_DIRECTORY_IF_NOT_EXISTS)) && 
-                !file.exists())
-        {
+        if ((perms.contains(CREATE_FILE_IF_NOT_EXISTS)
+                    || perms.contains(CREATE_DIRECTORY_IF_NOT_EXISTS))
+                    && !file.exists()) {
             try {
                 File parentFile = file.getCanonicalFile().getParentFile();
                 if (!parentFile.canWrite()) {
-                    throw new IllegalArgumentException(fileName +
-                            ": don't have permission to create the directory or normal file");
+                    throw new IllegalArgumentException(fileName
+                            + ": don't have permission to create the directory or normal file");
                 }
                 if (perms.contains(CREATE_FILE_IF_NOT_EXISTS)) {
                     Files.createFile(file.toPath());
@@ -66,12 +62,12 @@ public class PermissionsValidator {
             }
         }
         if (perms.contains(CAN_READ) && !file.canRead()) {
-            throw new IllegalArgumentException(file.getPath() + 
-                    ": don't have permission to read the file");
+            throw new IllegalArgumentException(file.getPath()
+                    + ": don't have permission to read the file");
         }
         if (perms.contains(CAN_WRITE) && !file.canWrite()) {
-            throw new IllegalArgumentException(file.getPath() + 
-                    ": don't have permission to write the file");
+            throw new IllegalArgumentException(file.getPath()
+                    + ": don't have permission to write the file");
         }
         if (perms.contains(IS_FILE) && !file.isFile()) {
             throw new IllegalArgumentException(file.getPath() + ": isn't a normal file");

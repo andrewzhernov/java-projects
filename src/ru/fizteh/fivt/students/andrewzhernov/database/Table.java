@@ -4,8 +4,6 @@ import static java.util.EnumSet.of;
 import static ru.fizteh.fivt.students.andrewzhernov.database.PermissionsValidator.Permissions.*;
 
 import java.io.*;
-import java.lang.Integer;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.RandomAccessFile;
 import java.util.List;
@@ -222,7 +220,8 @@ public class Table implements TableImpl {
             PermissionsValidator.validate(getTableFolder(), of(NOT_NULL, EXISTS, CAN_WRITE, IS_DIRECTORY));
             for (int bucketIndex = 0; bucketIndex < DIRECTORIES_COUNT; ++bucketIndex) {
                 String bucket = getTableBucket(bucketIndex);
-                if (PermissionsValidator.validate(bucket, of(NOT_NULL, CREATE_DIRECTORY_IF_NOT_EXISTS, CAN_WRITE, IS_DIRECTORY))) {
+                if (PermissionsValidator.validate(bucket, 
+                            of(NOT_NULL, CREATE_DIRECTORY_IF_NOT_EXISTS, CAN_WRITE, IS_DIRECTORY))) {
                     saveBucket(bucket, bucketIndex);
                 }
             }
