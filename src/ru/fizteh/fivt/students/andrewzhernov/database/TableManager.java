@@ -1,118 +1,106 @@
 package ru.fizteh.fivt.students.andrewzhernov.database;
 
-import java.io.*;
-import java.nio.file.Paths;
-import java.util.Map;
-import java.util.HashMap;
+import java.io.IOException;
+import java.text.ParseException;
+import java.util.List;
 
-import static java.util.EnumSet.of;
-import static ru.fizteh.fivt.students.andrewzhernov.database.PermissionsValidator.Permissions.*;
+/**
+ * Управляющий класс для работы с {@link Table таблицами}
+ *
+ * Предполагает, что актуальная версия с устройства хранения, сохраняется при создании
+ * экземпляра объекта. Далее ввод-вывод выполняется только в момент создания и удаления
+ * таблиц.
+ *
+ * Данный интерфейс не является потокобезопасным.
+ */
+public interface TableManager {
 
-public class TableManager implements TableManagerImpl {
-    private final String[] invalidCharacters = {".", "|", "\\", "*", "\"", "\'", ":", "/", "?", "<", ">"};
-    private String dbFolder;
-    private Map<String, Table> nameToTableMap;
-    private String currentTable;
+    /**
+     * Возвращает таблицу с указанным названием.
+     *
+     * Последовательные вызовы метода с одинаковыми аргументами должны возвращать один и тот же объект таблицы,
+     * если он не был удален с помощью {@link #removeTable(String)}.
+     *
+     * @param name Название таблицы.
+     * @return Объект, представляющий таблицу. Если таблицы с указанным именем не существует, возвращает null.
+     *
+     * @throws IllegalArgumentException Если название таблицы null или имеет недопустимое значение.
+     */
+    Table getTable(String name);
 
-    public TableManager(String folder) throws IllegalArgumentException {
-        PermissionsValidator.validateDbFolder(folder, of(NOT_NULL));
-        PermissionsValidator.validate(folder, of(CREATE_DIRECTORY_IF_NOT_EXISTS, CAN_READ, IS_DIRECTORY));
-        dbFolder = folder;
-        nameToTableMap = new HashMap<>();
-        currentTable = null;
-        loadDatabase();
-    }
+    /**
+     * Создаёт таблицу с указанным названием.
+     * Создает новую таблицу. Совершает необходимые дисковые операции.
+     *
+     * @param name Название таблицы.
+     * @param columnTypes Типы колонок таблицы. Не может быть пустой.
+     * @return Объект, представляющий таблицу. Если таблица с указанным именем существует, возвращает null.
+     *
+     * @throws IllegalArgumentException Если название таблицы null или имеет недопустимое значение. Если список типов
+     *                                  колонок null или содержит недопустимые значения.
+     * @throws java.io.IOException При ошибках ввода/вывода.
+     */
+    Table createTable(String name, List<Class<?>> columnTypes) throws IOException;
 
-    private boolean isValidName(String tableName) {
-        for (String character : invalidCharacters) {
-            if (tableName.contains(character)) {
-                return false;
-            }
-        }
-        return true;
-    }
+    /**
+     * Удаляет существующую таблицу с указанным названием.
+     *
+     * Объект удаленной таблицы, если был кем-то взят с помощью {@link #getTable(String)},
+     * с этого момента должен бросать {@link IllegalStateException}.
+     *
+     * @param name Название таблицы.
+     *
+     * @throws IllegalArgumentException Если название таблицы null или имеет недопустимое значение.
+     * @throws IllegalStateException Если таблицы с указанным названием не существует.
+     * @throws java.io.IOException - при ошибках ввода/вывода.
+     */
+    void removeTable(String name) throws IOException;
 
-    private void loadDatabase() throws IllegalArgumentException {
-        for (String tableName : new File(dbFolder).list()) {
-            if (!isValidName(tableName)) {
-                throw new IllegalArgumentException(tableName + ": incorrect table name");
-            }
-            Table table = new Table(this, tableName);
-            nameToTableMap.put(tableName, table);
-            table.loadTable();
-        }
-    }
+    /**
+     * Преобразовывает строку в объект {@link Storable}, соответствующий структуре таблицы.
+     *
+     * @param table Таблица, которой должен принадлежать {@link Storable}.
+     * @param value Строка, из которой нужно прочитать {@link Storable}.
+     * @return Прочитанный {@link Storable}.
+     *
+     * @throws ParseException - при каких-либо несоответстиях в прочитанных данных.
+     */
+    Storable deserialize(Table table, String value) throws ParseException;
 
-    private void checkUnsavedChanges() throws IllegalStateException {
-        int count = getCurrentTable().unsavedSize();
-        if (count > 0) {
-            throw new IllegalStateException(Integer.toString(count) + " unsaved changes");
-        }
-    }
+    /**
+     * Преобразовывает объект {@link Storable} в строку.
+     *
+     * @param table Таблица, которой должен принадлежать {@link Storable}.
+     * @param value {@link Storable}, который нужно записать.
+     * @return Строка с записанным значением.
+     *
+     * @throws ColumnFormatException При несоответствии типа в {@link Storable} и типа колонки в таблице.
+     */
+    String serialize(Table table, Storable value) throws ColumnFormatException;
 
-    public String getDbFolder() {
-        return dbFolder;
-    }
+    /**
+     * Создает новый пустой {@link Storable} для указанной таблицы.
+     *
+     * @param table Таблица, которой должен принадлежать {@link Storable}.
+     * @return Пустой {@link Storable}, нацеленный на использование с этой таблицей.
+     */
+    Storable createFor(Table table);
 
-    public Table getTable(String name) throws IllegalArgumentException {
-        if (name == null) {
-            throw new IllegalArgumentException("no table");
-        }
-        return nameToTableMap.get(name);
-    }
+    /**
+     * Создает новый {@link Storable} для указанной таблицы, подставляя туда переданные значения.
+     *
+     * @param table Таблица, которой должен принадлежать {@link Storable}.
+     * @param values Список значений, которыми нужно проинициализировать поля Storable.
+     * @return {@link Storable}, проинициализированный переданными значениями.
+     * @throws ColumnFormatException При несоответствии типа переданного значения и колонки.
+     * @throws IndexOutOfBoundsException При несоответствии числа переданных значений и числа колонок.
+     */
+    Storable createFor(Table table, List<?> values) throws ColumnFormatException, IndexOutOfBoundsException;
 
-    public Table getCurrentTable() throws IllegalArgumentException {
-        return getTable(currentTable);
-    }
-
-    public Table createTable(String name) throws IllegalArgumentException {
-        if (name == null || !isValidName(name)) {
-            throw new IllegalArgumentException(name + ": incorrect table name");
-        } else if (nameToTableMap.containsKey(name)) {
-            throw new IllegalArgumentException(name + " exists");
-        }
-        Table table = new Table(this, name);
-        nameToTableMap.put(name, table);
-        PermissionsValidator.validate(table.getTableFolder(), 
-                    of(NOT_NULL, CREATE_DIRECTORY_IF_NOT_EXISTS, CAN_WRITE, IS_DIRECTORY));
-        return table;
-    }
-
-    public void removeTable(String name) throws IllegalArgumentException, IllegalStateException {
-        if (name == null || !isValidName(name)) {
-            throw new IllegalArgumentException(name + ": incorrect table name");
-        } else if (!nameToTableMap.containsKey(name)) {
-            throw new IllegalStateException(name + " not exist");
-        } else if (name.equals(currentTable)) {
-            currentTable = null;
-        }
-        Utils.removeDir(Paths.get(dbFolder, name));
-        nameToTableMap.remove(name);
-    }
-
-    public String useTable(String name) throws IllegalArgumentException, IllegalStateException {
-        if (name == null || !isValidName(name)) {
-            throw new IllegalArgumentException(name + ": incorrect table name");
-        } else if (!nameToTableMap.containsKey(name)) {
-            throw new IllegalArgumentException(name + " not exist");
-        } else if (currentTable != null && !name.equals(currentTable)) {
-            checkUnsavedChanges();
-        }
-        currentTable = name;
-        return currentTable;
-    }
-
-    public Map<String, Integer> showTables() {
-        Map<String, Integer> tables = new HashMap<>();
-        for (String tablename : nameToTableMap.keySet()) {
-            tables.put(tablename, nameToTableMap.get(tablename).size());
-        }
-        return tables;
-    }
-
-    public void exit() throws IllegalStateException {
-        if (currentTable != null) {
-            checkUnsavedChanges();
-        }
-    }
+    /**
+     * Возвращает имена существующих таблиц, которые могут быть получены с помощью {@link #getTable(String)}.
+     *
+     * @return Имена существующих таблиц.
+     */
+    List<String> getTableNames();
 }

@@ -6,12 +6,12 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
         try {
-            TableManager database = new TableManager(System.getProperty("fizteh.db.dir"));
-            Shell shell = new Shell(database, new Command[] {
+            TableManager manager = new HashMapTableManager(System.getProperty("fizteh.db.dir"));
+            Shell shell = new Shell(manager, new Command[] {
                 new Command("size", 1, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        return database.getCurrentTable().size();
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        return manager.getCurrentTable().size();
                     }
                     @Override
                     public void handle(Object object) throws Exception {
@@ -20,8 +20,8 @@ public class Main {
                 }),
                 new Command("put", 3, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        return database.getCurrentTable().put(args[1], args[2]);
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        return manager.getCurrentTable().put(args[1], args[2]);
                     }
                     @Override
                     public void handle(Object object) throws Exception {
@@ -36,8 +36,8 @@ public class Main {
                 }),
                 new Command("get", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        return database.getCurrentTable().get(args[1]);
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        return manager.getCurrentTable().get(args[1]);
                     }
                     @Override
                     public void handle(Object object) throws Exception {
@@ -52,8 +52,8 @@ public class Main {
                 }),
                 new Command("remove", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        return database.getCurrentTable().remove(args[1]);
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        return manager.getCurrentTable().remove(args[1]);
                     }
                     @Override
                     public void handle(Object object) throws Exception {
@@ -66,8 +66,8 @@ public class Main {
                 }),
                 new Command("list", 1, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        return database.getCurrentTable().list();
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        return manager.getCurrentTable().list();
                     }
                     @Override
                     public void handle(Object object) throws Exception {
@@ -78,8 +78,8 @@ public class Main {
                 }),
                 new Command("commit", 1, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        return database.getCurrentTable().commit();
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        return manager.getCurrentTable().commit();
                     }
                     @Override
                     public void handle(Object object) throws Exception {
@@ -88,8 +88,8 @@ public class Main {
                 }),
                 new Command("rollback", 1, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        return database.getCurrentTable().rollback();
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        return manager.getCurrentTable().rollback();
                     }
                     @Override
                     public void handle(Object object) throws Exception {
@@ -98,8 +98,8 @@ public class Main {
                 }),
                 new Command("create", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        return database.createTable(args[1]);
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        return manager.createTable(args[1]);
                     }
                     @Override
                     public void handle(Object object) throws Exception {
@@ -108,8 +108,8 @@ public class Main {
                 }),
                 new Command("drop", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        database.removeTable(args[1]);
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        manager.removeTable(args[1]);
                         return null;
                     }
                     @Override
@@ -119,8 +119,8 @@ public class Main {
                 }),
                 new Command("use", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        return database.useTable(args[1]);
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        return manager.useTable(args[1]);
                     }
                     @Override
                     public void handle(Object object) throws Exception {
@@ -129,8 +129,8 @@ public class Main {
                 }),
                 new Command("show tables", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        return database.showTables();
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        return manager.showTables();
                     }
                     @Override
                     public void handle(Object object) throws Exception {
@@ -143,8 +143,8 @@ public class Main {
                 }),
                 new Command("exit", 1, new Handler() {
                     @Override
-                    public Object execute(TableManager database, String[] args) throws Exception {
-                        database.exit();
+                    public Object execute(TableManager manager, String[] args) throws Exception {
+                        manager.exit();
                         return null;
                     }
                     @Override

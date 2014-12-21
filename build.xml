@@ -29,6 +29,9 @@
         <jar jarfile="${jars}/fizteh.jar" basedir="${out}"/>
     </target>
 
+    <target name="junit" depends="run.checkstyle">
+        <fail if="run.checkstyle.failure"/>
+    </target>
     <target name="checkstyle" depends="dist, run.checkstyle">
         <fail if="run.checkstyle.failure"/>
     </target>
