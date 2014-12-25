@@ -1,18 +1,18 @@
 package ru.fizteh.fivt.students.andrewzhernov.database;
 
-import java.util.Scanner;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 
 public class Shell {
     private static final String PROMPT = "$ ";
     private static final String STATEMENT_DELIMITER = ";";
     private static final String PARAM_DELIMITER = "\\s+";
 
-    private TableManager manager;
+    private TableProvider manager;
     private Map<String, Command> commands;
 
-    public Shell(TableManager manager, Command[] commands) throws Exception {
+    public Shell(TableProvider manager, Command[] commands) throws Exception {
         this.manager = manager;
         this.commands = new HashMap<>();
         for (Command command : commands) {
@@ -31,7 +31,7 @@ public class Shell {
         }
     }
 
-    public void interactiveMode() throws Exception {
+    public void interactiveMode() {
         Scanner input = new Scanner(System.in);
         while (true) {
             System.out.print(PROMPT);
@@ -48,7 +48,7 @@ public class Shell {
     }
 
     public void batchMode(String[] args) throws Exception {
-        executeLine(String.join(";", args));
+        executeLine(Utils.join(";", args));
     }
 
     public void executeLine(String line) throws Exception {
@@ -64,7 +64,7 @@ public class Shell {
             Command command = commands.get(cmdName);
             if (command == null) {
                 if (!cmdName.isEmpty()) {
-                    throw new Exception(cmdName + ": command not found");
+                    throw new IllegalArgumentException(cmdName + ": command not found");
                 }
             } else {
                 command.execute(manager, params);

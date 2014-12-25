@@ -10,7 +10,7 @@ package ru.fizteh.fivt.students.andrewzhernov.database;
  * Для получения объекта из нужной колонки воспользуйтесь соответствующим геттером.
  * Для установки объекта а колонку воспользуйтесь {@link #setColumnAt(int, Object)} .
  */
-public interface Storable {
+public interface Storeable {
 
     /**
      * Установить значение в колонку

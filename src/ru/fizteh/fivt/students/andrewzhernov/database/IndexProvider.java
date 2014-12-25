@@ -4,7 +4,7 @@ package ru.fizteh.fivt.students.andrewzhernov.database;
  * Дополнительный интерфейс к {@link ru.fizteh.fivt.storage.structured.TableProvider}, позволяющий создавать индексы на
  * основе имеющейся таблицы.
  */
-public interface IndexManager extends TableManager {
+public interface IndexProvider extends TableProvider {
     /**
      *
      * Возвращает индекс с таким именем, если он существует.

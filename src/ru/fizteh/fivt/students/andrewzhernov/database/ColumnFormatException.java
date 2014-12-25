@@ -6,7 +6,9 @@ package ru.fizteh.fivt.students.andrewzhernov.database;
  */
 public class ColumnFormatException extends IllegalArgumentException {
 
-    public ColumnFormatException() {
+	private static final long serialVersionUID = 1L;
+
+	public ColumnFormatException() {
     }
 
     public ColumnFormatException(String s) {

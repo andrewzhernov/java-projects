@@ -13,7 +13,7 @@ import java.util.List;
  *
  * Данный интерфейс не является потокобезопасным.
  */
-public interface TableManager {
+public interface TableProvider {
 
     /**
      * Возвращает таблицу с указанным названием.
@@ -57,45 +57,45 @@ public interface TableManager {
     void removeTable(String name) throws IOException;
 
     /**
-     * Преобразовывает строку в объект {@link Storable}, соответствующий структуре таблицы.
+     * Преобразовывает строку в объект {@link Storeable}, соответствующий структуре таблицы.
      *
-     * @param table Таблица, которой должен принадлежать {@link Storable}.
-     * @param value Строка, из которой нужно прочитать {@link Storable}.
-     * @return Прочитанный {@link Storable}.
+     * @param table Таблица, которой должен принадлежать {@link Storeable}.
+     * @param value Строка, из которой нужно прочитать {@link Storeable}.
+     * @return Прочитанный {@link Storeable}.
      *
      * @throws ParseException - при каких-либо несоответстиях в прочитанных данных.
      */
-    Storable deserialize(Table table, String value) throws ParseException;
+    Storeable deserialize(Table table, String value) throws ParseException;
 
     /**
-     * Преобразовывает объект {@link Storable} в строку.
+     * Преобразовывает объект {@link Storeable} в строку.
      *
-     * @param table Таблица, которой должен принадлежать {@link Storable}.
-     * @param value {@link Storable}, который нужно записать.
+     * @param table Таблица, которой должен принадлежать {@link Storeable}.
+     * @param value {@link Storeable}, который нужно записать.
      * @return Строка с записанным значением.
      *
-     * @throws ColumnFormatException При несоответствии типа в {@link Storable} и типа колонки в таблице.
+     * @throws ColumnFormatException При несоответствии типа в {@link Storeable} и типа колонки в таблице.
      */
-    String serialize(Table table, Storable value) throws ColumnFormatException;
+    String serialize(Table table, Storeable value) throws ColumnFormatException;
 
     /**
-     * Создает новый пустой {@link Storable} для указанной таблицы.
+     * Создает новый пустой {@link Storeable} для указанной таблицы.
      *
-     * @param table Таблица, которой должен принадлежать {@link Storable}.
-     * @return Пустой {@link Storable}, нацеленный на использование с этой таблицей.
+     * @param table Таблица, которой должен принадлежать {@link Storeable}.
+     * @return Пустой {@link Storeable}, нацеленный на использование с этой таблицей.
      */
-    Storable createFor(Table table);
+    Storeable createFor(Table table);
 
     /**
-     * Создает новый {@link Storable} для указанной таблицы, подставляя туда переданные значения.
+     * Создает новый {@link Storeable} для указанной таблицы, подставляя туда переданные значения.
      *
-     * @param table Таблица, которой должен принадлежать {@link Storable}.
+     * @param table Таблица, которой должен принадлежать {@link Storeable}.
      * @param values Список значений, которыми нужно проинициализировать поля Storable.
-     * @return {@link Storable}, проинициализированный переданными значениями.
+     * @return {@link Storeable}, проинициализированный переданными значениями.
      * @throws ColumnFormatException При несоответствии типа переданного значения и колонки.
      * @throws IndexOutOfBoundsException При несоответствии числа переданных значений и числа колонок.
      */
-    Storable createFor(Table table, List<?> values) throws ColumnFormatException, IndexOutOfBoundsException;
+    Storeable createFor(Table table, List<?> values) throws ColumnFormatException, IndexOutOfBoundsException;
 
     /**
      * Возвращает имена существующих таблиц, которые могут быть получены с помощью {@link #getTable(String)}.
@@ -103,4 +103,16 @@ public interface TableManager {
      * @return Имена существующих таблиц.
      */
     List<String> getTableNames();
+    
+    Table getCurrentTable();
+    
+    String getDbFolder();
+
+    String useTable(String string);
+
+    void exit();
+
+    Object showTables();
+
+	void saveSignature();
 }

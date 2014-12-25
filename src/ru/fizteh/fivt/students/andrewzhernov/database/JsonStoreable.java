@@ -1,20 +1,19 @@
 package ru.fizteh.fivt.students.andrewzhernov.database;
 
 import java.util.List;
-import java.util.ArrayList;
 
-public class ArrayStorable implements Storable {
+public class JsonStoreable implements Storeable {
     private Object[] columnValues;
    
-    public ArrayStorable(List<Object> values) {
+    public JsonStoreable(List<Object> values) {
         columnValues = values.toArray();
     }
     
     @Override
     public void setColumnAt(int columnIndex, Object value) throws ColumnFormatException, IndexOutOfBoundsException {
         if (value.getClass() != columnValues[columnIndex].getClass()) {
-            throw new ColumnFormatException("Invalid column format: expected "
-                    columnValues[columnIndex].getClass().getName()  ", got "  value.getClass().getName());
+            throw new ColumnFormatException("Invalid column format: expected " +
+                    columnValues[columnIndex].getClass().getName() + ", got " + value.getClass().getName());
         }
         columnValues[columnIndex] = value;
     }
@@ -78,5 +77,9 @@ public class ArrayStorable implements Storable {
             throw new ColumnFormatException("Column is not String");
         }
         return (String) columnValues[columnIndex];
+    }
+    
+    public int size() {
+        return columnValues.length;
     }
 }

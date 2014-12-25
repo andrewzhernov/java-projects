@@ -6,58 +6,59 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
         try {
-            TableManager manager = new HashMapTableManager(System.getProperty("fizteh.db.dir"));
-            Shell shell = new Shell(manager, new Command[] {
+            TableProvider provider = new HashMapTableProvider(System.getProperty("fizteh.db.dir"));
+            Shell shell = new Shell(provider, new Command[] {
                 new Command("size", 1, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        return manager.getCurrentTable().size();
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        return provider.getCurrentTable().size();
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
-                        System.out.println((Integer) object);
+                    public void handle(TableProvider provider, Object object) throws Exception {
+                        System.out.println(object);
                     }
                 }),
                 new Command("put", 3, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        return manager.getCurrentTable().put(args[1], args[2]);
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        Table table = provider.getCurrentTable();
+                        return table.put(args[1], provider.deserialize(table, args[2]));
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
-                        String value = (String) object;
-                        if (value == null) {
+                    public void handle(TableProvider provider, Object object) throws Exception {
+                        if (object == null) {
                             System.out.println("new");
                         } else {
                             System.out.println("overwrite");
-                            System.out.println(value);
+                            System.out.println(provider.serialize(
+                                    provider.getCurrentTable(), (Storeable) object));
                         }
                     }
                 }),
                 new Command("get", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        return manager.getCurrentTable().get(args[1]);
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        return provider.getCurrentTable().get(args[1]);
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
-                        String value = (String) object;
-                        if (value == null) {
+                    public void handle(TableProvider provider, Object object) throws Exception {
+                        if (object == null) {
                             System.out.println("not found");
                         } else {
                             System.out.println("found");
-                            System.out.println(value);
+                            System.out.println(provider.serialize(
+                                    provider.getCurrentTable(), (Storeable) object));
                         }
                     }
                 }),
                 new Command("remove", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        return manager.getCurrentTable().remove(args[1]);
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        return provider.getCurrentTable().remove(args[1]);
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
-                        if ((String) object == null) {
+                    public void handle(TableProvider provider, Object object) throws Exception {
+                        if (object == null) {
                             System.out.println("not found");
                         } else {
                             System.out.println("removed");
@@ -66,74 +67,74 @@ public class Main {
                 }),
                 new Command("list", 1, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        return manager.getCurrentTable().list();
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        return provider.getCurrentTable().list();
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
+                    public void handle(TableProvider provider, Object object) throws Exception {
                         @SuppressWarnings("unchecked")
                         List<String> list = (List<String>) object;
-                        System.out.println(String.join(", ", list));
+                        System.out.println(Utils.join(", ", list.toArray(new String[list.size()])));
                     }
                 }),
                 new Command("commit", 1, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        return manager.getCurrentTable().commit();
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        return provider.getCurrentTable().commit();
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
-                        System.out.println((Integer) object);
+                    public void handle(TableProvider provider, Object object) throws Exception {
+                        System.out.println(object);
                     }
                 }),
                 new Command("rollback", 1, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        return manager.getCurrentTable().rollback();
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        return provider.getCurrentTable().rollback();
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
-                        System.out.println((Integer) object);
+                    public void handle(TableProvider provider, Object object) throws Exception {
+                        System.out.println(object);
                     }
                 }),
-                new Command("create", 2, new Handler() {
+                new Command("create", 3, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        return manager.createTable(args[1]);
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        return provider.createTable(args[1], Utils.parseSignature(args[2]));
                     }
-                    @Override
-                    public void handle(Object object) throws Exception {
+                   @Override
+                    public void handle(TableProvider provider, Object object) throws Exception {
                         System.out.println("created");
                     }
                 }),
                 new Command("drop", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        manager.removeTable(args[1]);
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        provider.removeTable(args[1]);
                         return null;
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
+                    public void handle(TableProvider provider, Object object) throws Exception {
                         System.out.println("dropped");
                     }
                 }),
                 new Command("use", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        return manager.useTable(args[1]);
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        return provider.useTable(args[1]);
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
+                    public void handle(TableProvider provider, Object object) throws Exception {
                         System.out.println("using " + (String) object);
                     }
                 }),
                 new Command("show tables", 2, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        return manager.showTables();
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        return provider.showTables();
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
+                    public void handle(TableProvider provider, Object object) throws Exception {
                         @SuppressWarnings("unchecked")
                         Map<String, Integer> tables = (Map<String, Integer>) object;
                         for (String tablename : tables.keySet()) {
@@ -143,12 +144,12 @@ public class Main {
                 }),
                 new Command("exit", 1, new Handler() {
                     @Override
-                    public Object execute(TableManager manager, String[] args) throws Exception {
-                        manager.exit();
+                    public Object execute(TableProvider provider, String[] args) throws Exception {
+                        provider.exit();
                         return null;
                     }
                     @Override
-                    public void handle(Object object) throws Exception {
+                    public void handle(TableProvider provider, Object object) throws Exception {
                         System.exit(0);
                     }
                 })

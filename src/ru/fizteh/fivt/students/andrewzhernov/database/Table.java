@@ -24,7 +24,7 @@ public interface Table extends Index {
      * @throws IllegalArgumentException Если значение параметров key или value является null.
      * @throws ColumnFormatException - при попытке передать Storable с колонками другого типа.
      */
-    Storable put(String key, Storable value) throws ColumnFormatException;
+    Storeable put(String key, Storeable value) throws ColumnFormatException;
 
     /**
      * Удаляет значение по указанному ключу.
@@ -34,7 +34,7 @@ public interface Table extends Index {
      *
      * @throws IllegalArgumentException Если значение параметра key является null.
      */
-    Storable remove(String key);
+    Storeable remove(String key);
 
     /**
      * Возвращает количество ключей в таблице. Возвращает размер текущей версии, с учётом незафиксированных изменений.
@@ -89,4 +89,12 @@ public interface Table extends Index {
      * @throws IndexOutOfBoundsException - неверный индекс колонки
      */
     Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException;
+
+
+    String getTableFolder();
+
+    /**
+     * 
+     */
+    void loadTable();
 }

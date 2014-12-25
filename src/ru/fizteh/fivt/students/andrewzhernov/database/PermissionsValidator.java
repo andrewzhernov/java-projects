@@ -1,9 +1,11 @@
 package ru.fizteh.fivt.students.andrewzhernov.database;
 
 import static ru.fizteh.fivt.students.andrewzhernov.database.PermissionsValidator.Permissions.*;
-import java.util.EnumSet;
 
+import java.util.EnumSet;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.nio.file.Files;
 import java.io.IOException;
 
@@ -16,7 +18,8 @@ public class PermissionsValidator {
         CAN_READ,
         CAN_WRITE,
         IS_FILE,
-        IS_DIRECTORY;
+        IS_DIRECTORY,
+        IS_FILE_EMPTY;
     }
 
     public static boolean validateTableName(String tableName, EnumSet<Permissions> perms) 
@@ -35,6 +38,11 @@ public class PermissionsValidator {
         return true;
     }
 
+    public static boolean validateFileEmpty(String fileName) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(fileName));     
+        return br.readLine() == null;
+    }
+    
     public static boolean validate(String fileName, 
                                    EnumSet<Permissions> perms) throws RuntimeException, IOException {
         if (perms.contains(NOT_NULL) && fileName == null) {
