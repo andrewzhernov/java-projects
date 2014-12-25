@@ -57,7 +57,7 @@ public interface Table extends Index {
      *
      * @throws java.io.IOException если произошла ошибка ввода/вывода. Целостность таблицы не гарантируется.
      */
-    int commit() throws IOException;
+    int commit() throws Exception;
 
     /**
      * Выполняет откат изменений с момента последней фиксации.
@@ -96,5 +96,5 @@ public interface Table extends Index {
     /**
      * 
      */
-    void loadTable();
+    void loadTable() throws Exception;
 }

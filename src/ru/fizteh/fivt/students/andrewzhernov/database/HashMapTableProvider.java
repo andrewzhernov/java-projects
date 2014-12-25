@@ -261,37 +261,33 @@ public class HashMapTableProvider implements TableProvider {
 
     @Override
     public String serialize(Table table, Storeable value) throws ColumnFormatException {
-      List<Class<?>> expectedTypes = nameToSignatureMap.get(table.getName());
-      
-      String result = "(";
-      
-      int i = 0;
-      for (Class<?> type : expectedTypes) {
-  		if (type.equals(Integer.class)) {
-			result += value.getIntAt(i);
-		} else if (type.equals(Long.class)) {
-			result += value.getLongAt(i);
-		} else if (type.equals(Byte.class)) {
-			result += value.getByteAt(i);
-		} else if (type.equals(Float.class)) {
-			result += value.getFloatAt(i);
-		} else if (type.equals(Double.class)) {
-			result += value.getDoubleAt(i);
-		} else if (type.equals(Boolean.class)) {
-			result += value.getBooleanAt(i);
-		} else if (type.equals(String.class)) {
-			result += value.getStringAt(i);
-		}
-  		i++;
-  		
-  		if (i != expectedTypes.size()) {
-  	  		result += ",";
-  		}
-      }
-      
-      result += ")";
-      
-      return result;
+        List<Class<?>> expectedTypes = nameToSignatureMap.get(table.getName());
+
+        String result = "(";
+
+        List<String> types = new LinkedList<>();
+        int i = 0;
+        for (Class<?> type : expectedTypes) {
+            if (type.equals(Integer.class)) {
+                types.add(value.getIntAt(i).toString());
+            } else if (type.equals(Long.class)) {
+                types.add(value.getLongAt(i).toString());
+            } else if (type.equals(Byte.class)) {
+                types.add(value.getByteAt(i).toString());
+            } else if (type.equals(Float.class)) {
+                types.add(value.getFloatAt(i).toString());
+            } else if (type.equals(Double.class)) {
+                types.add(value.getDoubleAt(i).toString());
+            } else if (type.equals(Boolean.class)) {
+                types.add(value.getBooleanAt(i).toString());
+            } else if (type.equals(String.class)) {
+                types.add(value.getStringAt(i));
+            }
+            i++;
+        }
+        result += String.join(",", types) + ")";
+
+        return result;
     }
 
     @Override

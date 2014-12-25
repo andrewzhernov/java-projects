@@ -17,39 +17,42 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class HashMapTable implements Table {
     private static final int DIRECTORIES_COUNT = 16;
     private static final int FILES_COUNT = 16;
+    private static final String DIR_EXTENSION = ".dir";
+    private static final String FILE_EXTENSION = ".dat";
+    private static final String ENCODING = "UTF-8";
     
-    private TableProvider provider_;
-    private String name_;
-    private int size_;
-    private Map<String, Storeable> disk_;
-    private ThreadLocal<Map<String, Storeable>> diff_;
-    private List<Class<?>> columnTypes_;
+    private TableProvider provider;
+    private String name;
+    private int size;
+    private Map<String, Storeable> disk;
+    private ThreadLocal<Map<String, Storeable>> diff;
+    private List<Class<?>> columnTypes;
 
     private ReadWriteLock rwlLock = new ReentrantReadWriteLock();
 
     public HashMapTable(TableProvider tableProvider, String tableName, List<Class<?>> columnTypes) {
         PermissionsValidator.validateTableName(tableName, of(NOT_NULL));
-        provider_ = tableProvider;
-        name_ = tableName;
-        columnTypes_ = columnTypes;
-        size_ = 0;
-        disk_ = new HashMap<>();
-        diff_ = ThreadLocal.withInitial(() -> new HashMap<String, Storeable>());
+        provider = tableProvider;
+        name = tableName;
+        columnTypes = columnTypes;
+        size = 0;
+        disk = new HashMap<>();
+        diff = ThreadLocal.withInitial(() -> new HashMap<String, Storeable>());
     }
 
     @Override
     public String getName() {
-        return name_;
+        return name;
     }
 
     @Override
     public int getNumberOfUncommittedChanges() {
-        return diff_.get().size();
+        return diff.get().size();
     }
 
     @Override
     public int size() {
-        return size_;
+        return size;
     }
 
     @Override
@@ -57,11 +60,11 @@ public class HashMapTable implements Table {
         if (key == null || value == null) {
             throw new IllegalArgumentException("Invalid key/value");
         }
-        if (!value.equals(disk_.get(key))) {
-            Storeable diffValue = diff_.get().put(key, value);
-            Storeable result = diffValue != null ? diffValue : disk_.get(key);
+        if (!value.equals(disk.get(key))) {
+            Storeable diffValue = diff.get().put(key, value);
+            Storeable result = diffValue != null ? diffValue : disk.get(key);
             if (result == null) {
-                ++size_;
+                ++size;
             }
             return result;
         }
@@ -73,8 +76,8 @@ public class HashMapTable implements Table {
         if (key == null) {
             throw new IllegalArgumentException("Invalid key");
         }
-        Storeable diffValue = diff_.get().get(key);
-        return diffValue != null ? diffValue : disk_.get(key);
+        Storeable diffValue = diff.get().get(key);
+        return diffValue != null ? diffValue : disk.get(key);
     }
 
     @Override
@@ -83,15 +86,15 @@ public class HashMapTable implements Table {
             throw new IllegalArgumentException("Invalid key");
         }
         Storeable result = null;
-        Storeable diskValue = disk_.get(key);
+        Storeable diskValue = disk.get(key);
         if (diskValue != null) {
-            Storeable diffValue = diff_.get().put(key, null);
+            Storeable diffValue = diff.get().put(key, null);
             result = diffValue != null ? diffValue : diskValue;
         } else {
-            result = diff_.get().remove(key);
+            result = diff.get().remove(key);
         }
         if (result != null) {
-            --size_;
+            --size;
         }
         return result;
     }
@@ -99,13 +102,13 @@ public class HashMapTable implements Table {
     @Override
     public List<String> list() {
         List<String> list = new LinkedList<>();
-        for (String key : disk_.keySet()) {
-            if (!diff_.get().containsKey(key)) {
+        for (String key : disk.keySet()) {
+            if (!diff.get().containsKey(key)) {
                 list.add(key);
             }
         }
-        for (String key : diff_.get().keySet()) {
-            if (diff_.get().get(key) != null) {
+        for (String key : diff.get().keySet()) {
+            if (diff.get().get(key) != null) {
                 list.add(key);
             }
         }
@@ -113,17 +116,17 @@ public class HashMapTable implements Table {
     }
 
     @Override
-    public int commit() {
-        int amount = diff_.get().size();
-        for (String key : diff_.get().keySet()) {
-            Storeable value = diff_.get().get(key);
+    public int commit() throws Exception {
+        int amount = diff.get().size();
+        for (String key : diff.get().keySet()) {
+            Storeable value = diff.get().get(key);
             if (value != null) {
-                disk_.put(key, value);
+                disk.put(key, value);
             } else {
-                disk_.remove(key);
+                disk.remove(key);
             }
         }
-        diff_.get().clear();
+        diff.get().clear();
         rwlLock.writeLock().lock(); 
         try {
             saveTable();
@@ -135,30 +138,30 @@ public class HashMapTable implements Table {
 
     @Override
     public int rollback() {
-        int amount = diff_.get().size();
-        diff_.get().clear();
-        size_ = disk_.size();
+        int amount = diff.get().size();
+        diff.get().clear();
+        size = disk.size();
         return amount;
     }
 
     @Override
     public String getTableFolder() {
-        return Paths.get(provider_.getDbFolder(), name_).toString();
+        return Paths.get(provider.getDbFolder(), name).toString();
     }
 
     public String getTableBucket(int bucket) {
-        return Paths.get(getTableFolder(), new Integer(bucket).toString() + ".dir").toString();
+        return Paths.get(getTableFolder(), new Integer(bucket).toString() + DIR_EXTENSION).toString();
     }
 
     public String getTableSubBucket(String bucket, int subBucket) {
-        return Paths.get(bucket, new Integer(subBucket).toString() + ".dat").toString();
+        return Paths.get(bucket, new Integer(subBucket).toString() + FILE_EXTENSION).toString();
     }
 
     private static String readItem(RandomAccessFile file) throws Exception {
         int wordSize = file.readInt();
         byte[] word = new byte[wordSize];
         file.read(word, 0, wordSize);
-        return new String(word, "UTF-8");
+        return new String(word, ENCODING);
     }
 
     private void loadSubBucket(String subBucket) throws Exception {
@@ -166,10 +169,10 @@ public class HashMapTable implements Table {
             while (file.getFilePointer() < file.length()) {
                 String key = readItem(file); 
                 String value = readItem(file);
-                disk_.put(key, provider_.deserialize(provider_.getTable(name_), value));
+                disk.put(key, provider.deserialize(provider.getTable(name), value));
             }
         } catch (Exception | OutOfMemoryError e) {
-            throw new Exception(subBucket + ": invalid file format");
+            throw new ConnectionInterruptException(subBucket + ": invalid file format");
         }
     }
 
@@ -183,25 +186,20 @@ public class HashMapTable implements Table {
     }
 
     @Override
-    public void loadTable() {
-        try {
-            PermissionsValidator.validate(getTableFolder(), of(NOT_NULL, EXISTS, CAN_READ, IS_DIRECTORY));
-            disk_.clear();
-            for (int bucketIndex = 0; bucketIndex < DIRECTORIES_COUNT; ++bucketIndex) {
-                String bucket = getTableBucket(bucketIndex);
-                if (PermissionsValidator.validate(bucket, of(NOT_NULL, EXISTS, CAN_READ, IS_DIRECTORY))) {
-                    loadBucket(bucket);
-                }
+    public void loadTable() throws Exception {
+        PermissionsValidator.validate(getTableFolder(), of(NOT_NULL, EXISTS, CAN_READ, IS_DIRECTORY));
+        disk.clear();
+        for (int bucketIndex = 0; bucketIndex < DIRECTORIES_COUNT; ++bucketIndex) {
+            String bucket = getTableBucket(bucketIndex);
+            if (PermissionsValidator.validate(bucket, of(NOT_NULL, EXISTS, CAN_READ, IS_DIRECTORY))) {
+                loadBucket(bucket);
             }
-            size_ = disk_.size();
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
         }
+        size = disk.size();
     }
 
     private static void writeItem(RandomAccessFile file, String word) throws Exception {
-        byte[] byteWord = word.getBytes("UTF-8");
+        byte[] byteWord = word.getBytes(ENCODING);
         file.writeInt(byteWord.length);
         file.write(byteWord);
     }
@@ -209,12 +207,12 @@ public class HashMapTable implements Table {
     private boolean saveSubBucket(String subBucket, int bucketIndex, int subBucketIndex) throws Exception {
         boolean isWritten = false;
         RandomAccessFile file = new RandomAccessFile(subBucket, "rw");
-        for (String key : disk_.keySet()) {
+        for (String key : disk.keySet()) {
             int hashcode = key.hashCode();
             int directoryNumber = hashcode % DIRECTORIES_COUNT;
             int fileNumber = hashcode / DIRECTORIES_COUNT % FILES_COUNT;
             if (bucketIndex == directoryNumber && subBucketIndex == fileNumber) {
-                String value = provider_.serialize(provider_.getTable(name_), disk_.get(key));
+                String value = provider.serialize(provider.getTable(name), disk.get(key));
                 writeItem(file, key);
                 writeItem(file, value);
                 isWritten = true;
@@ -240,29 +238,24 @@ public class HashMapTable implements Table {
         }
     }
 
-    private void saveTable() {
-        try {
-            PermissionsValidator.validate(getTableFolder(), of(NOT_NULL, EXISTS, CAN_WRITE, IS_DIRECTORY));
-            for (int bucketIndex = 0; bucketIndex < DIRECTORIES_COUNT; ++bucketIndex) {
-                String bucket = getTableBucket(bucketIndex);
-                if (PermissionsValidator.validate(bucket, 
-                            of(NOT_NULL, CREATE_DIRECTORY_IF_NOT_EXISTS, CAN_WRITE, IS_DIRECTORY))) {
-                    saveBucket(bucket, bucketIndex);
-                }
+    private void saveTable() throws Exception {
+        PermissionsValidator.validate(getTableFolder(), of(NOT_NULL, EXISTS, CAN_WRITE, IS_DIRECTORY));
+        for (int bucketIndex = 0; bucketIndex < DIRECTORIES_COUNT; ++bucketIndex) {
+            String bucket = getTableBucket(bucketIndex);
+            if (PermissionsValidator.validate(bucket, 
+                        of(NOT_NULL, CREATE_DIRECTORY_IF_NOT_EXISTS, CAN_WRITE, IS_DIRECTORY))) {
+                saveBucket(bucket, bucketIndex);
             }
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-            System.exit(1);
         }
     }
 
     @Override
     public int getColumnsCount() {
-      return columnTypes_.size();
+      return columnTypes.size();
     }
 
     @Override
     public Class<?> getColumnType(int columnIndex) throws IndexOutOfBoundsException {
-      return columnTypes_.get(columnIndex);
+      return columnTypes.get(columnIndex);
     }
 }

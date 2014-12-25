@@ -4,10 +4,33 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.DirectoryStream;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 public class Utils {
+    private static Map<Class<?>, String> ctsMap = new HashMap<>();
+    private static Map<String, Class<?>> stcMap = new HashMap<>();
+
+    static {
+        ctsMap.put(Integer.class, "int");
+        ctsMap.put(Long.class, "long");
+        ctsMap.put(Float.class, "float");
+        ctsMap.put(Double.class, "double");
+        ctsMap.put(Byte.class, "byte");
+        ctsMap.put(Boolean.class, "boolean");
+        ctsMap.put(String.class, "String");
+
+        stcMap.put("int", Integer.class);
+        stcMap.put("long", Long.class);
+        stcMap.put("float", Float.class);
+        stcMap.put("double", Double.class);
+        stcMap.put("byte", Byte.class);
+        stcMap.put("boolean", Boolean.class);
+        stcMap.put("String", String.class);
+    }
+
     public static void removeDir(Path directory) throws IllegalStateException {
         try {
             if (Files.isDirectory(directory)) {
@@ -54,22 +77,10 @@ public class Utils {
         
         String[] types = signature.split(",");
         
-        List<Class<?>> result = new ArrayList<>();
+        List<Class<?>> result = new LinkedList<>();
         for (String type : types) {
-            if (type.equals("int")) {
-              result.add(Integer.class);
-            } else if (type.equals("long")) {
-              result.add(Long.class);
-            } else if (type.equals("byte")) {
-              result.add(Byte.class);
-            } else if (type.equals("float")) {
-              result.add(Float.class);
-            } else if (type.equals("double")) {
-              result.add(Double.class);
-            } else if (type.equals("boolean")) {
-              result.add(Boolean.class);
-            } else if (type.equals("String")) {
-              result.add(String.class);
+            if (stcMap.containsKey(type)) {
+                result.add(stcMap.get(type));
             } else {
             	throw new Exception("Wrong type (" + type + ")");
             }
@@ -81,31 +92,16 @@ public class Utils {
     public static String makeSignature(List<Class<?>> types) {
     	String result = "(";
 
+        List<String> typeList = new LinkedList<>();
     	int i = 0;
         for (Class<?> type : types) {
-            if (type.equals(Integer.class)) {
-              result += "int";
-            } else if (type.equals(Long.class)) {
-                result += "long";
-            } else if (type.equals(Byte.class)) {
-                result += "byte";
-            } else if (type.equals(Float.class)) {
-                result += "float";
-            } else if (type.equals(Double.class)) {
-                result += "double";
-            } else if (type.equals(Boolean.class)) {
-                result += "boolean";
-            } else if (type.equals(String.class)) {
-                result += "String";
+            if (ctsMap.containsKey(type)) {
+                typeList.add(ctsMap.get(type));
             }
-            
             i++;
-            if (i != types.size()) {
-            	result += ",";
-            }
         }
         
-        result += ")";
+        result += String.join(",", typeList) + ")";
         return result;
     }
     
