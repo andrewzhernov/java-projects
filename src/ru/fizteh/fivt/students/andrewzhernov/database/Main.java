@@ -2,6 +2,7 @@ package ru.fizteh.fivt.students.andrewzhernov.database;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Main {
     public static void main(String[] args) {
@@ -136,9 +137,9 @@ public class Main {
                     @Override
                     public void handle(TableProvider provider, Object object) throws Exception {
                         @SuppressWarnings("unchecked")
-                        Map<String, Integer> tables = (Map<String, Integer>) object;
-                        for (String tablename : tables.keySet()) {
-                            System.out.printf("%s %d\n", tablename, tables.get(tablename));
+                        Map<String, Storeable> map = (Map<String, Storeable>) object;
+                        for (String tablename : map.keySet()) {
+                            System.out.println(tablename);
                         }
                     }
                 }),

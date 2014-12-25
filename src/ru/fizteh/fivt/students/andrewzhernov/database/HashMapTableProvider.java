@@ -24,6 +24,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 public class HashMapTableProvider implements TableProvider {
     private static final String[] invalidCharacters = {".", "|", "\\", "*", "\"", "\'", ":", "/", "?", "<", ">"};
 
@@ -33,6 +36,8 @@ public class HashMapTableProvider implements TableProvider {
     private Map<String, Table> nameToTableMap;
     private Map<String, List<Class<?>>> nameToSignatureMap;
     private String currentTable;
+
+    private ReadWriteLock rwlLock = new ReentrantReadWriteLock();
 
     public HashMapTableProvider(String folder) throws Exception {
         PermissionsValidator.validateDbFolder(folder, of(NOT_NULL));
@@ -105,7 +110,12 @@ public class HashMapTableProvider implements TableProvider {
             }
             Table table = new HashMapTable(this, tableName, nameToSignatureMap.get(tableName));
             nameToTableMap.put(tableName, table);
-            table.loadTable();
+            rwlLock.readLock().lock(); 
+            try {
+                table.loadTable();
+            } finally {
+                rwlLock.readLock().unlock();
+            }
         }
     }
 
@@ -159,7 +169,12 @@ public class HashMapTableProvider implements TableProvider {
         } else if (name.equals(currentTable)) {
             currentTable = null;
         }
-        Utils.removeDir(Paths.get(dbFolder, name));
+        rwlLock.writeLock().lock(); 
+        try {
+            Utils.removeDir(Paths.get(dbFolder, name));
+        } finally {
+            rwlLock.writeLock().unlock();
+        }
         nameToTableMap.remove(name);
     }
 
@@ -292,6 +307,6 @@ public class HashMapTableProvider implements TableProvider {
 
     @Override
     public Object showTables() {
-      return null;
+      return nameToTableMap;
     }
 }

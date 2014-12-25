@@ -11,6 +11,9 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 public class HashMapTable implements Table {
     private static final int DIRECTORIES_COUNT = 16;
     private static final int FILES_COUNT = 16;
@@ -19,9 +22,11 @@ public class HashMapTable implements Table {
     private String name_;
     private int size_;
     private Map<String, Storeable> disk_;
-    private Map<String, Storeable> diff_;
+    private ThreadLocal<Map<String, Storeable>> diff_;
     private List<Class<?>> columnTypes_;
-    
+
+    private ReadWriteLock rwlLock = new ReentrantReadWriteLock();
+
     public HashMapTable(TableProvider tableProvider, String tableName, List<Class<?>> columnTypes) {
         PermissionsValidator.validateTableName(tableName, of(NOT_NULL));
         provider_ = tableProvider;
@@ -29,7 +34,7 @@ public class HashMapTable implements Table {
         columnTypes_ = columnTypes;
         size_ = 0;
         disk_ = new HashMap<>();
-        diff_ = new HashMap<>();
+        diff_ = ThreadLocal.withInitial(() -> new HashMap<String, Storeable>());
     }
 
     @Override
@@ -39,7 +44,7 @@ public class HashMapTable implements Table {
 
     @Override
     public int getNumberOfUncommittedChanges() {
-        return diff_.size();
+        return diff_.get().size();
     }
 
     @Override
@@ -52,12 +57,15 @@ public class HashMapTable implements Table {
         if (key == null || value == null) {
             throw new IllegalArgumentException("Invalid key/value");
         }
-        Storeable diffValue = diff_.put(key, value);
-        Storeable result = diffValue != null ? diffValue : disk_.get(key);
-        if (result == null) {
-            ++size_;
+        if (!value.equals(disk_.get(key))) {
+            Storeable diffValue = diff_.get().put(key, value);
+            Storeable result = diffValue != null ? diffValue : disk_.get(key);
+            if (result == null) {
+                ++size_;
+            }
+            return result;
         }
-        return result;
+        return value;
     }
 
     @Override
@@ -65,7 +73,7 @@ public class HashMapTable implements Table {
         if (key == null) {
             throw new IllegalArgumentException("Invalid key");
         }
-        Storeable diffValue = diff_.get(key);
+        Storeable diffValue = diff_.get().get(key);
         return diffValue != null ? diffValue : disk_.get(key);
     }
 
@@ -77,10 +85,10 @@ public class HashMapTable implements Table {
         Storeable result = null;
         Storeable diskValue = disk_.get(key);
         if (diskValue != null) {
-            Storeable diffValue = diff_.put(key, null);
+            Storeable diffValue = diff_.get().put(key, null);
             result = diffValue != null ? diffValue : diskValue;
         } else {
-            result = diff_.remove(key);
+            result = diff_.get().remove(key);
         }
         if (result != null) {
             --size_;
@@ -92,12 +100,12 @@ public class HashMapTable implements Table {
     public List<String> list() {
         List<String> list = new LinkedList<>();
         for (String key : disk_.keySet()) {
-            if (!diff_.containsKey(key)) {
+            if (!diff_.get().containsKey(key)) {
                 list.add(key);
             }
         }
-        for (String key : diff_.keySet()) {
-            if (diff_.get(key) != null) {
+        for (String key : diff_.get().keySet()) {
+            if (diff_.get().get(key) != null) {
                 list.add(key);
             }
         }
@@ -106,24 +114,29 @@ public class HashMapTable implements Table {
 
     @Override
     public int commit() {
-        int amount = diff_.size();
-        for (String key : diff_.keySet()) {
-            Storeable value = diff_.get(key);
+        int amount = diff_.get().size();
+        for (String key : diff_.get().keySet()) {
+            Storeable value = diff_.get().get(key);
             if (value != null) {
                 disk_.put(key, value);
             } else {
                 disk_.remove(key);
             }
         }
-        diff_.clear();
-        saveTable();
+        diff_.get().clear();
+        rwlLock.writeLock().lock(); 
+        try {
+            saveTable();
+        } finally {
+            rwlLock.writeLock().unlock();
+        }
         return amount;
     }
 
     @Override
     public int rollback() {
-        int amount = diff_.size();
-        diff_.clear();
+        int amount = diff_.get().size();
+        diff_.get().clear();
         size_ = disk_.size();
         return amount;
     }
